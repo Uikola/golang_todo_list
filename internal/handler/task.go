@@ -3,7 +3,6 @@ package handler
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strconv"
 	"todolist/internal/model"
@@ -30,12 +29,14 @@ type getAllListsResponse struct {
 func (h *Handler) getAllTasks(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
 	lists := h.services.Task.GetAll(userId)
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, getAllListsResponse{
@@ -46,10 +47,12 @@ func (h *Handler) getAllTasks(c *gin.Context) {
 func (h *Handler) getTaskByID(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -61,35 +64,41 @@ func (h *Handler) getTaskByID(c *gin.Context) {
 func (h *Handler) createTask(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 	var input model.Task
 
 	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id := h.services.Task.Create(userId, input)
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
+		"id":      id,
+		"status":  "ok",
+		"message": "task created",
 	})
 }
 
 func (h *Handler) deleteTask(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	h.services.Task.Delete(userId, uint(id))
 
-	c.JSON(http.StatusOK, map[string]string{
-		"status": "ok",
+	c.JSON(http.StatusOK, statusResponse{
+		Status:  "ok",
+		Message: "task deleted",
 	})
 
 }
@@ -97,24 +106,28 @@ func (h *Handler) deleteTask(c *gin.Context) {
 func (h *Handler) updateTask(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	var input model.UpdateTaskInput
 	if err := c.BindJSON(&input); err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	err = h.services.Task.Update(userId, uint(id), input)
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	c.JSON(http.StatusOK, map[string]string{
-		"status": "ok",
+	c.JSON(http.StatusOK, statusResponse{
+		Status:  "ok",
+		Message: "task updated",
 	})
 }

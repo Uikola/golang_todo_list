@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strings"
 	"todolist/internal/model"
@@ -17,16 +16,18 @@ func (h *Handler) signUp(c *gin.Context) {
 	var input model.User
 
 	if err := c.BindJSON(&input); err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	id, err := h.services.Authorization.CreateUser(input)
 	if err != nil {
-		log.Fatal(err)
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
+		"id":      id,
+		"message": "User created",
 	})
 }
 
@@ -39,11 +40,13 @@ func (h *Handler) signIn(c *gin.Context) {
 	var input signInInput
 
 	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	token, err := h.services.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -55,16 +58,19 @@ func (h *Handler) signIn(c *gin.Context) {
 func (h *Handler) userIdentity(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
+		newErrorResponse(c, http.StatusUnauthorized, "auth header is empty. You have to sign-in")
 		return
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
+		newErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
 		return
 	}
 
 	userId, err := h.services.Authorization.ParseToken(headerParts[1])
 	if err != nil {
+		newErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
