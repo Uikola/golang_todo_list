@@ -33,7 +33,7 @@ func (h *Handler) getAllTasks(c *gin.Context) {
 		return
 	}
 
-	lists := h.services.Task.GetAll(userId)
+	lists := h.Services.Task.GetAll(userId)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -56,7 +56,7 @@ func (h *Handler) getTaskByID(c *gin.Context) {
 		return
 	}
 
-	list := h.services.Task.GetByID(userId, uint(id))
+	list := h.Services.Task.GetByID(userId, uint(id))
 
 	c.JSON(http.StatusOK, list)
 }
@@ -74,7 +74,7 @@ func (h *Handler) createTask(c *gin.Context) {
 		return
 	}
 
-	id := h.services.Task.Create(userId, input)
+	id := h.Services.Task.Create(userId, input)
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id":      id,
@@ -94,7 +94,7 @@ func (h *Handler) deleteTask(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	h.services.Task.Delete(userId, uint(id))
+	h.Services.Task.Delete(userId, uint(id))
 
 	c.JSON(http.StatusOK, statusResponse{
 		Status:  "ok",
@@ -121,7 +121,7 @@ func (h *Handler) updateTask(c *gin.Context) {
 		return
 	}
 
-	err = h.services.Task.Update(userId, uint(id), input)
+	err = h.Services.Task.Update(userId, uint(id), input)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

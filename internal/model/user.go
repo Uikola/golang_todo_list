@@ -2,9 +2,9 @@ package model
 
 type User struct {
 	ID       uint   `json:"id" gorm:"primaryKey"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Age      int    `json:"age"`
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Age      int    `json:"age" binding:"required"`
 }

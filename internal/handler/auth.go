@@ -16,11 +16,11 @@ func (h *Handler) signUp(c *gin.Context) {
 	var input model.User
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
-	id, err := h.services.Authorization.CreateUser(input)
+	id, err := h.Services.Authorization.CreateUser(input)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
@@ -40,11 +40,11 @@ func (h *Handler) signIn(c *gin.Context) {
 	var input signInInput
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
-	token, err := h.services.Authorization.GenerateToken(input.Username, input.Password)
+	token, err := h.Services.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -68,7 +68,12 @@ func (h *Handler) userIdentity(c *gin.Context) {
 		return
 	}
 
-	userId, err := h.services.Authorization.ParseToken(headerParts[1])
+	if headerParts[0] != "Bearer" {
+		newErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
+		return
+	}
+
+	userId, err := h.Services.Authorization.ParseToken(headerParts[1])
 	if err != nil {
 		newErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
