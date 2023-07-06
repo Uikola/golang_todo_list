@@ -7,9 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"net/http/httptest"
 	"testing"
+	"todolist/internal/mocks"
 	"todolist/internal/model"
 	"todolist/internal/service"
-	mock_service "todolist/internal/service/mocks"
 )
 
 func TestHandler_signUp(t *testing.T) {
